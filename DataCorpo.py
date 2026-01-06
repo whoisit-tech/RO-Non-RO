@@ -116,8 +116,8 @@ ro_rate = ro_produk / total_produk * 100 if total_produk > 0 else 0
 c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
 c1.metric("Total Customer", f"{total_customer:,}")
 c2.metric("Total Realisasi", f"{total_produk:,}")
-c3.metric("RO Produk", f"{ro_produk:,}")
-c4.metric("Non-RO Produk", f"{non_ro_produk:,}")
+c3.metric("Realisasi RO", f"{ro_produk:,}")
+c4.metric("Realisasi Non-RO", f"{non_ro_produk:,}")
 c5.metric("RO Rate", f"{ro_rate:.1f}%")
 c6.metric("Customer RO", f"{customer_ro:,}")
 c7.metric("Customer Non-RO", f"{customer_non_ro:,}")
@@ -219,7 +219,7 @@ st.dataframe(
 # ===============================
 # MULTI UNIT REALISASI
 # ===============================
-st.markdown("## 📅 Realisasi Multi Unit Detail per PT")
+st.markdown("## Realisasi Multi Unit Detail per PT")
 
 # 1. Ambil tanggal yang ada lebih dari 1 PT (multi unit)
 multi_unit_dates = (
@@ -247,15 +247,9 @@ multi_unit_detail = (
 )
 
 # 4. Tampilkan
-st.dataframe(multi_unit_detail, use_container_width=True)
-
-st.markdown("## 📅 Realisasi Multi Unit per Bulan per Perusahaan")
-
-# Tambahkan kolom Tahun-Bulan
-df["TahunBulan"] = df["realisasidate"].dt.to_period("M").astype(str)
 
 # Group per bulan dan PT
-st.markdown("## 📅 Realisasi Multi Unit per Bulan per Perusahaan (Detail Customer)")
+st.markdown("## Realisasi Multi Unit per Bulan per Perusahaan (Detail Customer)")
 
 # Tambahkan kolom Tahun-Bulan
 df["TahunBulan"] = df["realisasidate"].dt.to_period("M").astype(str)
