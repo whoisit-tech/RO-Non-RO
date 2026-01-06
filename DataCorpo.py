@@ -115,7 +115,7 @@ ro_rate = ro_produk / total_produk * 100 if total_produk > 0 else 0
 
 c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
 c1.metric("Total Customer", f"{total_customer:,}")
-c2.metric("Total Produk", f"{total_produk:,}")
+c2.metric("Total Realisasi", f"{total_produk:,}")
 c3.metric("RO Produk", f"{ro_produk:,}")
 c4.metric("Non-RO Produk", f"{non_ro_produk:,}")
 c5.metric("RO Rate", f"{ro_rate:.1f}%")
