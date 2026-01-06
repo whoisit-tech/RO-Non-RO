@@ -91,17 +91,27 @@ df["RO_Status"] = np.where(df["trx_ke"] > 1, "RO", "Non-RO")
 # ===============================
 # KEY METRICS
 # ===============================
-st.markdown("## Key Metrics")
-
+# Semua customer
 total_customer = df["Customerid"].nunique()
+
+# Customer dengan transaksi RO
+customer_ro_set = set(df[df["RO_Status"] == "RO"]["Customerid"].unique())
+
+# Customer dengan transaksi Non-RO
+customer_non_ro_set = set(df[df["RO_Status"] == "Non-RO"]["Customerid"].unique())
+
+# Customer Non-RO murni = Non-RO tapi bukan RO
+customer_non_ro_murni_set = customer_non_ro_set - customer_ro_set
+
+# Hitung jumlah customer masing-masing
+customer_ro = len(customer_ro_set)
+customer_non_ro = len(customer_non_ro_murni_set)
+
+# Produk dan transaksi RO/Non-RO
 total_produk = len(df)
 ro_produk = (df["RO_Status"] == "RO").sum()
 non_ro_produk = (df["RO_Status"] == "Non-RO").sum()
 ro_rate = ro_produk / total_produk * 100 if total_produk > 0 else 0
-
-# Total customer RO dan Non-RO (customer yang punya setidaknya 1 trx RO atau Non-RO)
-customer_ro = df[df["RO_Status"] == "RO"]["Customerid"].nunique()
-customer_non_ro = df[df["RO_Status"] == "Non-RO"]["Customerid"].nunique()
 
 c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
 c1.metric("Total Customer", f"{total_customer:,}")
@@ -209,9 +219,9 @@ st.dataframe(
 # ===============================
 # MULTI UNIT REALISASI
 # ===============================
-st.markdown("## 📅 Realisasi Multi Unit Detail per PT di Tanggal yang Sama")
+st.markdown("## 📅 Realisasi Multi Unit Detail per PT")
 
-# Filter dulu tanggal dengan multi PT (lebih dari 1 PT)
+# 1. Ambil tanggal yang ada lebih dari 1 PT (multi unit)
 multi_unit_dates = (
     df.groupby("realisasidate")["accountname"]
     .nunique()
@@ -221,25 +231,27 @@ multi_unit_dates = (
 
 multi_unit_dates = multi_unit_dates[multi_unit_dates["Jumlah_PT"] > 1]
 
-# Ambil data original yang tanggalnya masuk ke multi unit dates
+# 2. Filter data yang tanggalnya termasuk multi unit
 df_multi_detail = df[df["realisasidate"].isin(multi_unit_dates["realisasidate"])]
 
-# Group per tanggal dan per PT
+# 3. Group per tanggal dan per PT
 multi_unit_detail = (
     df_multi_detail.groupby(["realisasidate", "accountname"])
     .agg(
         Jumlah_Produk=("Segmen", "nunique"),
-        Jumlah_Realisasi=("NoContract", "count")
+        Jumlah_Realisasi=("NoContract", "count"),
+        Produk=("Segmen", lambda x: ", ".join(sorted(x.unique())))
     )
     .reset_index()
     .sort_values(["realisasidate", "Jumlah_Realisasi"], ascending=[True, False])
 )
 
+# 4. Tampilkan
 st.dataframe(multi_unit_detail, use_container_width=True)
+
 
 # ===============================
 # DETAIL DATA (OPTIONAL)
 # ===============================
 with st.expander("Lihat Detail Data"):
     st.dataframe(df, use_container_width=True)
-
