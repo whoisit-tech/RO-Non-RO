@@ -99,12 +99,18 @@ ro_produk = (df["RO_Status"] == "RO").sum()
 non_ro_produk = (df["RO_Status"] == "Non-RO").sum()
 ro_rate = ro_produk / total_produk * 100 if total_produk > 0 else 0
 
-c1, c2, c3, c4, c5 = st.columns(5)
+# Total customer RO dan Non-RO (customer yang punya setidaknya 1 trx RO atau Non-RO)
+customer_ro = df[df["RO_Status"] == "RO"]["Customerid"].nunique()
+customer_non_ro = df[df["RO_Status"] == "Non-RO"]["Customerid"].nunique()
+
+c1, c2, c3, c4, c5, c6, c7 = st.columns(7)
 c1.metric("Total Customer", f"{total_customer:,}")
 c2.metric("Total Produk", f"{total_produk:,}")
 c3.metric("RO Produk", f"{ro_produk:,}")
 c4.metric("Non-RO Produk", f"{non_ro_produk:,}")
 c5.metric("RO Rate", f"{ro_rate:.1f}%")
+c6.metric("Customer RO", f"{customer_ro:,}")
+c7.metric("Customer Non-RO", f"{customer_non_ro:,}")
 
 # ===============================
 # TREND RO VS NON-RO
@@ -203,23 +209,37 @@ st.dataframe(
 # ===============================
 # MULTI UNIT REALISASI
 # ===============================
-st.markdown("## Realisasi Multi Unit di Tanggal yang Sama")
+st.markdown("## 📅 Realisasi Multi Unit Detail per PT di Tanggal yang Sama")
 
-multi_unit = (
-    df.groupby("realisasidate")
-    .agg(
-        Jumlah_PT=("accountname", "nunique"),
-        Daftar_PT=("accountname", lambda x: ", ".join(sorted(x.unique())))
-    )
+# Filter dulu tanggal dengan multi PT (lebih dari 1 PT)
+multi_unit_dates = (
+    df.groupby("realisasidate")["accountname"]
+    .nunique()
     .reset_index()
+    .rename(columns={"accountname": "Jumlah_PT"})
 )
 
-multi_unit = multi_unit[multi_unit["Jumlah_PT"] > 1]
+multi_unit_dates = multi_unit_dates[multi_unit_dates["Jumlah_PT"] > 1]
 
-st.dataframe(multi_unit, use_container_width=True)
+# Ambil data original yang tanggalnya masuk ke multi unit dates
+df_multi_detail = df[df["realisasidate"].isin(multi_unit_dates["realisasidate"])]
+
+# Group per tanggal dan per PT
+multi_unit_detail = (
+    df_multi_detail.groupby(["realisasidate", "accountname"])
+    .agg(
+        Jumlah_Produk=("Segmen", "nunique"),
+        Jumlah_Realisasi=("NoContract", "count")
+    )
+    .reset_index()
+    .sort_values(["realisasidate", "Jumlah_Realisasi"], ascending=[True, False])
+)
+
+st.dataframe(multi_unit_detail, use_container_width=True)
 
 # ===============================
 # DETAIL DATA (OPTIONAL)
 # ===============================
 with st.expander("Lihat Detail Data"):
     st.dataframe(df, use_container_width=True)
+
