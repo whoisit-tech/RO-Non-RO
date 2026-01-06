@@ -255,19 +255,25 @@ st.markdown("## 📅 Realisasi Multi Unit per Bulan per Perusahaan")
 df["TahunBulan"] = df["realisasidate"].dt.to_period("M").astype(str)
 
 # Group per bulan dan PT
-multi_unit_bulan = (
-    df.groupby(["TahunBulan", "accountname"])
+st.markdown("## 📅 Realisasi Multi Unit per Bulan per Perusahaan (Detail Customer)")
+
+# Tambahkan kolom Tahun-Bulan
+df["TahunBulan"] = df["realisasidate"].dt.to_period("M").astype(str)
+
+# Group per bulan, PT, dan Customer
+multi_unit_bulan_cust = (
+    df.groupby(["TahunBulan", "accountname", "Customerid"])
     .agg(
         Jumlah_Produk=("Segmen", "nunique"),
         Jumlah_Realisasi=("NoContract", "count"),
         Produk=("Segmen", lambda x: ", ".join(sorted(x.unique())))
     )
     .reset_index()
-    .sort_values(["TahunBulan", "Jumlah_Realisasi"], ascending=[True, False])
+    .sort_values(["TahunBulan", "accountname", "Jumlah_Realisasi"], ascending=[True, True, False])
 )
 
 # Tampilkan tabel
-st.dataframe(multi_unit_bulan, use_container_width=True)
+st.dataframe(multi_unit_bulan_cust, use_container_width=True)
 
 
 # ===============================
