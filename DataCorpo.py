@@ -249,6 +249,26 @@ multi_unit_detail = (
 # 4. Tampilkan
 st.dataframe(multi_unit_detail, use_container_width=True)
 
+st.markdown("## 📅 Realisasi Multi Unit per Bulan per Perusahaan")
+
+# Tambahkan kolom Tahun-Bulan
+df["TahunBulan"] = df["realisasidate"].dt.to_period("M").astype(str)
+
+# Group per bulan dan PT
+multi_unit_bulan = (
+    df.groupby(["TahunBulan", "accountname"])
+    .agg(
+        Jumlah_Produk=("Segmen", "nunique"),
+        Jumlah_Realisasi=("NoContract", "count"),
+        Produk=("Segmen", lambda x: ", ".join(sorted(x.unique())))
+    )
+    .reset_index()
+    .sort_values(["TahunBulan", "Jumlah_Realisasi"], ascending=[True, False])
+)
+
+# Tampilkan tabel
+st.dataframe(multi_unit_bulan, use_container_width=True)
+
 
 # ===============================
 # DETAIL DATA (OPTIONAL)
