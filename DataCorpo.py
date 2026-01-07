@@ -284,6 +284,21 @@ multi_unit_bulan_cust = (
     .sort_values(["TahunBulan", "accountname", "Jumlah_Realisasi"], ascending=[True, True, False])
 )
 
+## RO DETAIL
+df_master["Bulan_Nama"] = df_master["realisasidate"].dt.strftime("%b")
+df_ro = df_master[df_master["RO_Status"] == "RO"]
+ro_tahun = (
+    df_ro
+    .groupby(["accountname", "Customerid", "Tahun"])
+    .agg(
+        Jumlah_RO=("Bulan_Nama", "nunique"),
+        Bulan_RO=("Bulan_Nama", lambda x: ", ".join(sorted(x.unique())))
+    )
+    .reset_index()
+)
+st.markdown("## RO per Tahun per Perusahaan")
+st.dataframe(ro_tahun, use_container_width=True)
+
 # Tampilkan tabel
 st.dataframe(multi_unit_bulan_cust, use_container_width=True)
 
