@@ -91,22 +91,6 @@ if search_pt:
     df = df[df["accountname"].str.contains(search_pt, case=False, na=False)]
 
 # ===============================
-# RO FLAG
-# ===============================
-# ===============================
-# RO FLAG
-# ===============================
-df = df.sort_values(["Customerid", "Tahun", "realisasidate"])
-
-df["trx_ke"] = (
-    df.sort_values(["Customerid", "realisasidate"])
-      .groupby("Customerid")
-      .cumcount() + 1
-)
-
-df["RO_Status"] = np.where(df["trx_ke"] > 1, "RO", "Non-RO")
-
-# ===============================
 # KEY METRICS
 # ===============================
 # Semua customer
@@ -285,19 +269,23 @@ multi_unit_bulan_cust = (
 )
 
 ## RO DETAIL
-df_master["Bulan_Nama"] = df_master["realisasidate"].dt.strftime("%b")
-df_ro = df_master[df_master["RO_Status"] == "RO"]
+df_ro = df[df["RO_Status"] == "RO"]
+
 ro_tahun = (
     df_ro
     .groupby(["accountname", "Customerid", "Tahun"])
     .agg(
-        Jumlah_RO=("Bulan_Nama", "nunique"),
-        Bulan_RO=("Bulan_Nama", lambda x: ", ".join(sorted(x.unique())))
+        Jumlah_RO=("Bulan", "nunique"),
+        Bulan_RO=("Bulan", lambda x: ", ".join(
+            sorted(pd.to_datetime(x, format="%m").dt.strftime("%b").unique())
+        ))
     )
     .reset_index()
 )
-st.markdown("## RO per Tahun per Perusahaan")
+
+st.markdown("## RO per Tahun per Perusahaan (Filtered)")
 st.dataframe(ro_tahun, use_container_width=True)
+
 
 # Tampilkan tabel
 st.dataframe(multi_unit_bulan_cust, use_container_width=True)
