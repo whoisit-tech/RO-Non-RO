@@ -33,6 +33,20 @@ df["Tahun"] = df["realisasidate"].dt.year
 df["Bulan"] = df["realisasidate"].dt.month
 df["Bulan_Nama"] = df["realisasidate"].dt.strftime("%b")
 
+
+df_master = df.copy()
+
+df_master = df_master.sort_values(["Customerid", "realisasidate"])
+
+df_master["trx_ke"] = (
+    df_master.groupby("Customerid")
+    .cumcount() + 1
+)
+
+df_master["RO_Status"] = np.where(
+    df_master["trx_ke"] > 1, "RO", "Non-RO"
+)
+
 # ===============================
 # FILTER (TOP BAR)
 # ===============================
@@ -67,10 +81,10 @@ with st.container():
             placeholder="Ketik nama PT..."
         )
 
-df = df[
-    (df["Tahun"].isin(tahun_selected)) &
-    (df["Bulan"].isin(bulan_selected)) &
-    (df["Segmen"].isin(segmen_selected))
+df = df_master[
+    (df_master["Tahun"].isin(tahun_selected)) &
+    (df_master["Bulan"].isin(bulan_selected)) &
+    (df_master["Segmen"].isin(segmen_selected))
 ]
 
 if search_pt:
@@ -79,11 +93,15 @@ if search_pt:
 # ===============================
 # RO FLAG
 # ===============================
+# ===============================
+# RO FLAG
+# ===============================
 df = df.sort_values(["Customerid", "Tahun", "realisasidate"])
 
 df["trx_ke"] = (
-    df.groupby(["Customerid", "Tahun"])
-    .cumcount() + 1
+    df.sort_values(["Customerid", "realisasidate"])
+      .groupby("Customerid")
+      .cumcount() + 1
 )
 
 df["RO_Status"] = np.where(df["trx_ke"] > 1, "RO", "Non-RO")
